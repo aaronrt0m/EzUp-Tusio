@@ -1,4 +1,4 @@
-import { mkdir } from "node:fs/promises";
+import { mkdir, readFile } from "node:fs/promises";
 import { createServer } from "node:http";
 import { FileStore } from "@tus/file-store";
 import { Server as TusServer } from "@tus/server";
@@ -15,6 +15,7 @@ if (allowedOrigins.length === 0) {
 }
 
 await mkdir(uploadDirectory, { recursive: true });
+const statusPage = await readFile(new URL("./index.html", import.meta.url));
 
 const tusServer = new TusServer({
   path: "/files",
@@ -25,6 +26,19 @@ const tusServer = new TusServer({
 });
 
 const httpServer = createServer((request, response) => {
+  if (
+    request.method === "GET" &&
+    (request.url === "/" || request.url === "/index.html")
+  ) {
+    response.writeHead(200, {
+      "Content-Type": "text/html; charset=utf-8",
+      "Cache-Control": "no-store",
+      "X-Content-Type-Options": "nosniff",
+    });
+    response.end(statusPage);
+    return;
+  }
+
   if (request.method === "GET" && request.url === "/healthz") {
     response.writeHead(200, { "Content-Type": "text/plain" });
     response.end("ok");
