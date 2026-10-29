@@ -1,0 +1,18 @@
+services:
+  - type: web
+    name: ezup-tusio
+    runtime: node
+    rootDir: server
+    buildCommand: npm install && npm run build
+    startCommand: npm start
+    plan: starter
+    healthCheckPath: /healthz
+    envVars:
+      - key: UPLOAD_DIR
+        value: /var/data/uploads
+      - key: ALLOWED_ORIGINS
+        value: https://aaronrt0m.github.io
+    disk:
+      name: ezup-uploads
+      mountPath: /var/data
+      sizeGB: 1
