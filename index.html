@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#f6f5f0">
+  <meta name="theme-color" content="#1677b8">
   <meta name="description" content="Resize and compress photos locally for your portal. Your files stay on your device.">
   <title>EzUp — Application photo, sorted.</title>
   <script src="https://cdn.tailwindcss.com"></script>
@@ -12,15 +12,15 @@
       theme: {
         extend: {
           colors: {
-            ink: "#172d2a",
-            forest: "#245b4c",
-            leaf: "#dce9df",
-            paper: "#f6f5f0",
-            clay: "#bd6244",
-            muted: "#77827c"
+            ink: "#45525c",
+            forest: "#1677b8",
+            leaf: "#eaf4fb",
+            paper: "#ffffff",
+            clay: "#d75c32",
+            muted: "#717d87"
           },
           fontFamily: {
-            sans: ["Inter", "ui-sans-serif", "system-ui", "sans-serif"]
+            sans: ["Open Sans", "ui-sans-serif", "system-ui", "sans-serif"]
           }
         }
       }
@@ -28,71 +28,59 @@
   </script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Lora:ital,wght@1,400;1,500&family=Open+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/browser-image-compression/2.0.2/browser-image-compression.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
   <style>
     :root { color-scheme: light; }
-    body { font-family: "DM Sans", sans-serif; }
+    body { font-family: "Open Sans", sans-serif; }
     .mono { font-family: "DM Mono", monospace; }
-    .grid-paper {
-      background-image: linear-gradient(rgba(36, 91, 76, .045) 1px, transparent 1px), linear-gradient(90deg, rgba(36, 91, 76, .045) 1px, transparent 1px);
-      background-size: 24px 24px;
+    .serif-italic { font-family: "Lora", Georgia, serif; font-style: italic; }
+    .hero-header {
+      background: #eaf5fb url("blue-image.png") center top / cover no-repeat;
     }
-    .drop-active { border-color: #245b4c !important; background-color: #edf4ee !important; transform: scale(1.005); }
+    .drop-active { border-color: #1677b8 !important; background-color: #eaf4fb !important; }
     .progress-fill { transition: width .3s ease; }
+    .tool-panel { border-radius: .25rem !important; box-shadow: none !important; }
+    .file-row { border-radius: .25rem !important; box-shadow: none !important; }
     @media (prefers-reduced-motion: reduce) {
       *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; animation-duration: .01ms !important; }
     }
   </style>
 </head>
 <body class="min-h-screen bg-paper text-ink antialiased">
-  <header class="border-b border-ink/10 bg-paper/90">
-    <div class="mx-auto flex max-w-7xl items-center justify-between px-5 py-5 sm:px-8">
-      <a href="#" class="flex items-center gap-3" aria-label="EzUp home">
-        <span class="grid h-10 w-10 place-items-center rounded-xl bg-forest text-white">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M7 3.75h7l4.25 4.5v11A1.75 1.75 0 0 1 16.5 21h-9A1.75 1.75 0 0 1 5.75 19.25v-13.75A1.75 1.75 0 0 1 7.5 3.75Z" stroke="currentColor" stroke-width="1.6"/><path d="M13.75 4v4.5h4.1M8.5 13h7m-7 3.5h7" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+  <header class="hero-header text-sky-950">
+    <div class="mx-auto flex max-w-5xl flex-col items-center px-5 py-12 text-center sm:py-16">
+      <a href="#" class="flex flex-col items-center gap-4" aria-label="EzUp home">
+        <span class="grid h-20 w-20 place-items-center rounded-full border-[6px] border-blue-700/20 bg-white/90 text-blue-700 shadow-[0_0_0_8px_rgba(22,119,184,.12)]">
+          <svg width="40" height="40" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="m12 2.5 2.78 5.63 6.22.9-4.5 4.39 1.06 6.2L12 16.7l-5.56 2.92 1.06-6.2L3 9.03l6.22-.9L12 2.5Z"/></svg>
         </span>
-        <span>
-          <span class="block text-[15px] font-extrabold tracking-tight">Ez<span class="text-forest">Up</span></span>
-          <span class="block text-[10px] font-semibold uppercase tracking-[.18em] text-muted">Application photo, sorted.</span>
-        </span>
+        <span class="block text-4xl font-extrabold tracking-tight sm:text-5xl">EzUp</span>
+        <span class="serif-italic block text-base text-slate-700 sm:text-lg">Resize &amp; compress images in a couple of clicks.</span>
       </a>
-      <span class="hidden items-center gap-2 rounded-full border border-forest/15 bg-white/70 px-3 py-1.5 text-xs font-semibold text-forest sm:flex">
-        <span class="h-1.5 w-1.5 rounded-full bg-forest"></span>
-        100% on your device
-      </span>
+      <div class="mt-7 flex flex-wrap items-center justify-center gap-2 text-sm text-slate-700">
+        <span class="rounded border border-sky-900/15 bg-white/75 px-4 py-2">Private by design</span>
+        <span class="rounded border border-sky-900/15 bg-white/75 px-4 py-2">Free to use</span>
+        <span class="rounded border border-sky-900/15 bg-white/75 px-4 py-2">Works in your browser</span>
+      </div>
     </div>
   </header>
 
-  <main class="mx-auto max-w-7xl px-5 pb-16 pt-10 sm:px-8 sm:pt-14">
-    <section class="grid items-end gap-8 lg:grid-cols-[1fr_auto]">
-      <div>
-        <p class="mb-4 flex items-center gap-2 text-xs font-bold uppercase tracking-[.2em] text-clay">
-          <span class="h-px w-7 bg-clay"></span> The last-mile application tool
-        </p>
-        <h1 class="max-w-3xl text-4xl font-extrabold leading-[1.07] tracking-[-.045em] sm:text-6xl">
-          Your photo.<br><span class="text-forest">Portal-ready.</span>
-        </h1>
-        <p class="mt-5 max-w-xl text-base leading-7 text-muted sm:text-lg">
-          Resize and compress application photos in one go. Pick a portal, drop your files, and download the finished images — nothing gets uploaded.
-        </p>
-      </div>
-      <div class="grid-paper hidden min-w-48 rounded-2xl border border-ink/10 bg-white/50 p-5 lg:block">
-        <p class="text-xs font-bold uppercase tracking-[.16em] text-muted">The simple promise</p>
-        <p class="mt-3 text-2xl font-extrabold tracking-tight">Local in.<br>Local out.</p>
-        <p class="mt-2 text-sm leading-5 text-muted">Your photos never leave this browser.</p>
-      </div>
+  <main class="mx-auto max-w-5xl px-5 pb-16 pt-10 sm:px-8 sm:pt-12">
+    <section class="border-b border-ink/10 pb-7">
+      <h1 class="serif-italic text-3xl text-clay">Description</h1>
+      <p class="mt-4 max-w-3xl text-base leading-7 text-ink">
+        Resize and compress your images to match portal requirements. Choose a preset or enter your own dimensions, add your photos, then download the finished files — everything stays on your device.
+      </p>
     </section>
 
-    <section class="mt-10 grid gap-6 lg:mt-14 lg:grid-cols-[.82fr_1.18fr]">
-      <div class="rounded-3xl border border-ink/10 bg-white p-5 shadow-[0_12px_40px_rgba(23,45,42,.045)] sm:p-7">
+    <section class="mt-8 flex flex-col gap-8">
+      <div class="tool-panel border-b border-ink/15 pb-7">
         <div class="flex items-start justify-between gap-4">
           <div>
-            <p class="text-xs font-bold uppercase tracking-[.16em] text-clay">01 / Set your specs</p>
-            <h2 class="mt-2 text-xl font-extrabold tracking-tight">Choose a portal</h2>
+            <h2 class="text-2xl font-bold tracking-tight text-ink">Image settings</h2>
           </div>
-          <span class="rounded-lg bg-leaf px-2.5 py-1.5 text-xs font-bold text-forest">JPEG output</span>
+          <span class="rounded border border-forest/25 px-2.5 py-1.5 text-xs font-semibold text-forest">JPEG output</span>
         </div>
         <label for="preset" class="mb-2 mt-6 block text-sm font-semibold">Portal preset</label>
         <div class="relative">
@@ -103,12 +91,21 @@
           </select>
           <svg class="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-muted" width="17" height="17" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="m5 7.5 5 5 5-5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
         </div>
-        <div id="custom-fields" class="mt-4 hidden grid-cols-3 gap-3">
+        <div id="custom-fields" class="mt-4 hidden grid-cols-1 gap-3 sm:grid-cols-3">
           <div><label for="custom-width" class="mb-1.5 block text-xs font-semibold text-muted">Width (px)</label><input id="custom-width" type="number" min="1" max="10000" placeholder="Original" class="w-full rounded-xl border border-ink/15 bg-paper px-3 py-3 text-sm outline-none focus:border-forest focus:ring-2 focus:ring-forest/15"></div>
           <div><label for="custom-height" class="mb-1.5 block text-xs font-semibold text-muted">Height (px)</label><input id="custom-height" type="number" min="1" max="10000" placeholder="Original" class="w-full rounded-xl border border-ink/15 bg-paper px-3 py-3 text-sm outline-none focus:border-forest focus:ring-2 focus:ring-forest/15"></div>
-          <div><label for="custom-size" class="mb-1.5 block text-xs font-semibold text-muted">Max KB</label><input id="custom-size" type="number" min="1" max="10240" value="100" class="w-full rounded-xl border border-ink/15 bg-paper px-3 py-3 text-sm outline-none focus:border-forest focus:ring-2 focus:ring-forest/15"></div>
+          <div>
+            <label for="custom-size" class="mb-1.5 block text-xs font-semibold text-muted">Max file size</label>
+            <div class="flex">
+              <input id="custom-size" type="number" min="0.01" step="any" value="100" class="min-w-0 flex-1 rounded-l-xl border border-r-0 border-ink/15 bg-paper px-3 py-3 text-right text-sm tabular-nums outline-none focus:border-forest focus:ring-2 focus:ring-forest/15">
+              <select id="custom-size-unit" aria-label="Maximum file size unit" class="w-[4.5rem] shrink-0 rounded-r-xl border border-ink/15 bg-paper px-2 text-center text-sm font-semibold outline-none focus:border-forest focus:ring-2 focus:ring-forest/15">
+                <option value="KB">KB</option>
+                <option value="MB">MB</option>
+              </select>
+            </div>
+          </div>
         </div>
-        <div class="mt-5 rounded-xl bg-paper p-4">
+        <div class="mt-5 border border-sky-100 bg-sky-50 p-4">
           <div class="flex items-center justify-between gap-3">
             <span class="text-sm font-semibold">Output target</span>
             <span id="target-summary" class="mono text-xs font-medium text-forest">150 × 200 px · ≤ 30 KB</span>
@@ -117,16 +114,15 @@
         </div>
       </div>
 
-      <div class="rounded-3xl border border-ink/10 bg-white p-5 shadow-[0_12px_40px_rgba(23,45,42,.045)] sm:p-7">
+      <div class="tool-panel pb-7">
         <div class="flex items-start justify-between gap-4">
           <div>
-            <p class="text-xs font-bold uppercase tracking-[.16em] text-clay">02 / Add your images</p>
-            <h2 class="mt-2 text-xl font-extrabold tracking-tight">Drop files here</h2>
+            <h2 class="text-2xl font-bold tracking-tight text-ink">Add your images</h2>
           </div>
-          <span class="rounded-lg border border-ink/10 px-2.5 py-1.5 text-xs font-semibold text-muted">JPG · PNG · WEBP</span>
+          <span class="text-xs font-semibold text-muted">JPG · PNG · WEBP</span>
         </div>
-        <button id="drop-zone" type="button" class="mt-6 flex min-h-52 w-full flex-col items-center justify-center rounded-2xl border-2 border-dashed border-ink/20 bg-paper/70 px-5 py-8 text-center transition hover:border-forest/60 hover:bg-leaf/30 focus:outline-none focus:ring-2 focus:ring-forest/30" aria-label="Choose image files or drop them here">
-          <span class="grid h-12 w-12 place-items-center rounded-2xl bg-leaf text-forest">
+        <button id="drop-zone" type="button" class="mt-5 flex min-h-48 w-full flex-col items-center justify-center rounded border-2 border-dashed border-forest/30 bg-sky-50 px-5 py-8 text-center transition hover:border-forest/60 hover:bg-leaf/50 focus:outline-none focus:ring-2 focus:ring-forest/30" aria-label="Choose image files or drop them here">
+          <span class="grid h-12 w-12 place-items-center rounded-full bg-white text-forest shadow-sm">
             <svg width="23" height="23" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 16V4m0 0L7.5 8.5M12 4l4.5 4.5M5 14.5v4A1.5 1.5 0 0 0 6.5 20h11a1.5 1.5 0 0 0 1.5-1.5v-4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
           </span>
           <span class="mt-4 text-sm font-bold">Drag and drop your images</span>
@@ -143,14 +139,13 @@
     </section>
 
     <section class="mt-10 sm:mt-12" aria-labelledby="batch-heading">
-      <div class="flex flex-wrap items-end justify-between gap-4 border-b border-ink/10 pb-4">
+      <div class="flex flex-wrap items-end justify-between gap-4 border-b border-ink/15 pb-4">
         <div>
-          <p class="text-xs font-bold uppercase tracking-[.16em] text-clay">03 / Ready when you are</p>
-          <h2 id="batch-heading" class="mt-2 text-2xl font-extrabold tracking-tight">Your batch <span id="file-count" class="ml-1 align-middle text-sm font-semibold text-muted">0 files</span></h2>
+          <h2 id="batch-heading" class="text-2xl font-bold tracking-tight">Your files <span id="file-count" class="ml-1 align-middle text-sm font-semibold text-muted">0 files</span></h2>
         </div>
-        <button id="clear-button" type="button" class="hidden rounded-lg px-3 py-2 text-sm font-bold text-muted transition hover:bg-ink/5 hover:text-ink">Clear all</button>
+        <button id="clear-button" type="button" class="hidden rounded px-3 py-2 text-sm font-semibold text-forest transition hover:bg-leaf">Clear all</button>
       </div>
-      <div id="batch-empty" class="grid-paper mt-5 rounded-2xl border border-dashed border-ink/15 bg-white/40 px-5 py-12 text-center">
+      <div id="batch-empty" class="mt-5 border border-dashed border-ink/20 bg-slate-50 px-5 py-12 text-center">
         <p class="text-sm font-semibold text-muted">Your compressed images will show up here.</p>
         <p class="mt-1 text-xs text-muted">Add a file above to get started.</p>
       </div>
@@ -158,7 +153,7 @@
       <div id="batch-list" class="mt-4 space-y-3"></div>
     </section>
     <footer class="mt-16 flex flex-col gap-2 border-t border-ink/10 pt-5 text-xs text-muted sm:flex-row sm:items-center sm:justify-between">
-      <span>Made for simpler applications. No account, no uploads, no fuss.</span>
+      <span>No account. No uploads. Just simpler image compression.</span>
       <span class="mono">EzUp · Built for your browser</span>
     </footer>
   </main>
@@ -166,8 +161,8 @@
   <script>
     (() => {
       const presets = {
-        etlab: { width: 150, height: 200, maxKB: 30 },
-        ssc: { width: 200, height: 230, maxKB: 50 }
+        etlab: { width: 150, height: 200, maxKB: 30, sizeLabel: "30 KB" },
+        ssc: { width: 200, height: 230, maxKB: 50, sizeLabel: "50 KB" }
       };
       const presetSelect = document.getElementById("preset");
       const customFields = document.getElementById("custom-fields");
@@ -189,10 +184,13 @@
 
       function getSettings() {
         if (presetSelect.value !== "custom") return presets[presetSelect.value];
+        const sizeValue = Number(document.getElementById("custom-size").value);
+        const sizeUnit = document.getElementById("custom-size-unit").value;
         return {
           width: document.getElementById("custom-width").value === "" ? null : Number(document.getElementById("custom-width").value),
           height: document.getElementById("custom-height").value === "" ? null : Number(document.getElementById("custom-height").value),
-          maxKB: Number(document.getElementById("custom-size").value)
+          maxKB: sizeValue * (sizeUnit === "MB" ? 1024 : 1),
+          sizeLabel: `${sizeValue || "—"} ${sizeUnit}`
         };
       }
 
@@ -201,7 +199,7 @@
         customFields.classList.toggle("hidden", !custom);
         customFields.classList.toggle("grid", custom);
         const settings = getSettings();
-        targetSummary.textContent = `${settings.width === null ? "Original" : settings.width} × ${settings.height === null ? "Original" : settings.height} px · ≤ ${settings.maxKB || "—"} KB`;
+        targetSummary.textContent = `${settings.width === null ? "Original" : settings.width} × ${settings.height === null ? "Original" : settings.height} px · ≤ ${settings.sizeLabel}`;
       }
 
       function formatBytes(bytes) {
@@ -224,7 +222,7 @@
             ? `<span class="flex items-center gap-1.5 font-semibold ${item.withinLimit ? "text-forest" : "text-clay"}"><span>${item.withinLimit ? "✓" : "!"}</span>${item.withinLimit ? "Ready" : "Over size target"}</span>`
             : `<span class="font-semibold text-red-700" title="${escapeHTML(item.error || "Compression failed")}">Could not compress</span>`;
         const output = item.status === "done"
-          ? `<span class="mono font-medium text-ink">${formatBytes(item.output.size)}${item.withinLimit ? "" : `<span class="ml-1 text-clay">(over ${item.maxKB} KB)</span>`}</span>`
+          ? `<span class="mono font-medium text-ink">${formatBytes(item.output.size)}${item.withinLimit ? "" : `<span class="ml-1 text-clay">(over ${escapeHTML(item.maxSizeLabel)})</span>`}</span>`
           : item.status === "error" ? `<span class="text-xs text-red-700">${escapeHTML(item.error || "Try another image.")}</span>` : `<span class="text-muted">—</span>`;
         const download = item.status === "done"
           ? `<a href="${item.url}" download="${escapeHTML(item.output.name)}" class="inline-flex items-center gap-2 rounded-lg bg-forest px-3 py-2 text-xs font-bold text-white transition hover:bg-ink focus:outline-none focus:ring-2 focus:ring-forest/40" aria-label="Download ${escapeHTML(item.output.name)}">Download <span aria-hidden="true">↓</span></a>`
@@ -252,12 +250,12 @@
         const id = ++nextId;
         const item = {
           id, file, status: "processing", progress: 0, output: null,
-          url: null, preview: null, withinLimit: false, error: "", maxKB: 0
+          url: null, preview: null, withinLimit: false, error: "", maxKB: 0, maxSizeLabel: ""
         };
         items.set(id, item);
         const row = document.createElement("article");
         row.id = `item-${id}`;
-        row.className = "grid gap-3 rounded-2xl border border-ink/10 bg-white p-4 shadow-[0_6px_20px_rgba(23,45,42,.025)] sm:grid-cols-[minmax(0,1.5fr)_minmax(100px,.7fr)_minmax(120px,.8fr)_auto] sm:items-center sm:gap-4";
+        row.className = "file-row grid gap-3 border-b border-ink/10 bg-white py-4 sm:grid-cols-[minmax(0,1.5fr)_minmax(100px,.7fr)_minmax(120px,.8fr)_auto] sm:items-center sm:gap-4";
         batchList.prepend(row);
         updateBatchState();
         renderItem(item);
@@ -283,7 +281,7 @@
         if (!card) {
           card = document.createElement("article");
           card.id = `folder-archive-${batch.id}`;
-          card.className = "flex flex-col gap-3 rounded-2xl border border-forest/15 bg-leaf/40 p-4 sm:flex-row sm:items-center sm:justify-between";
+          card.className = "flex flex-col gap-3 border border-forest/20 bg-sky-50 p-4 sm:flex-row sm:items-center sm:justify-between";
           folderArchives.prepend(card);
         }
         const readyCount = batch.items.filter(item => item.status === "done").length;
@@ -297,8 +295,8 @@
               ? `${readyCount} of ${batch.items.length} images compressed${failedCount ? ` · ${failedCount} failed` : ""}`
               : `${readyCount} of ${batch.items.length} images compressed`;
         const action = batch.status === "ready"
-          ? `<a href="${batch.archiveURL}" download="${escapeHTML(batch.folderName)}.zip" class="inline-flex shrink-0 items-center justify-center gap-2 rounded-lg bg-forest px-4 py-2.5 text-xs font-bold text-white transition hover:bg-ink focus:outline-none focus:ring-2 focus:ring-forest/40">Download ZIP <span aria-hidden="true">↓</span></a>`
-          : `<span class="shrink-0 rounded-lg bg-white/70 px-4 py-2.5 text-xs font-bold ${batch.status === "error" ? "text-red-700" : "text-muted"}">${batch.status === "zipping" ? "Preparing…" : batch.status === "error" ? "ZIP unavailable" : "ZIP pending"}</span>`;
+          ? `<a href="${batch.archiveURL}" download="${escapeHTML(batch.folderName)}.zip" class="inline-flex shrink-0 items-center justify-center gap-2 rounded-sm bg-forest px-4 py-2.5 text-xs font-bold text-white transition hover:bg-sky-900 focus:outline-none focus:ring-2 focus:ring-forest/40">Download ZIP <span aria-hidden="true">↓</span></a>`
+          : `<span class="shrink-0 border border-ink/10 bg-white px-4 py-2.5 text-xs font-bold ${batch.status === "error" ? "text-red-700" : "text-muted"}">${batch.status === "zipping" ? "Preparing…" : batch.status === "error" ? "ZIP unavailable" : "ZIP pending"}</span>`;
         card.innerHTML = `
           <div class="flex min-w-0 items-center gap-3">
             <span class="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-white text-forest">
@@ -425,6 +423,7 @@
           item.status = "done";
           item.progress = 100;
           item.maxKB = settings.maxKB;
+          item.maxSizeLabel = settings.sizeLabel;
           item.withinLimit = item.output.size <= settings.maxKB * 1024;
         } catch (error) {
           if (!items.has(item.id)) return;
@@ -527,7 +526,7 @@
       }
 
       presetSelect.addEventListener("change", updateTarget);
-      ["custom-width", "custom-height", "custom-size"].forEach(id => {
+      ["custom-width", "custom-height", "custom-size", "custom-size-unit"].forEach(id => {
         document.getElementById(id).addEventListener("input", updateTarget);
       });
       dropZone.addEventListener("click", () => fileInput.click());
