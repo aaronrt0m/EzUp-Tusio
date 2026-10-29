@@ -4,8 +4,8 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#f6f5f0">
-  <meta name="description" content="Compress application photos locally for Indian government portals. Your files stay on your device.">
-  <title>GovtDocCompressor — Application photo, sorted.</title>
+  <meta name="description" content="Resize and compress photos locally for your portal. Your files stay on your device.">
+  <title>EzUp — Application photo, sorted.</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
     tailwind.config = {
@@ -30,6 +30,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/browser-image-compression/2.0.2/browser-image-compression.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
   <style>
     :root { color-scheme: light; }
     body { font-family: "DM Sans", sans-serif; }
@@ -48,12 +49,12 @@
 <body class="min-h-screen bg-paper text-ink antialiased">
   <header class="border-b border-ink/10 bg-paper/90">
     <div class="mx-auto flex max-w-7xl items-center justify-between px-5 py-5 sm:px-8">
-      <a href="#" class="flex items-center gap-3" aria-label="GovtDocCompressor home">
+      <a href="#" class="flex items-center gap-3" aria-label="EzUp home">
         <span class="grid h-10 w-10 place-items-center rounded-xl bg-forest text-white">
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M7 3.75h7l4.25 4.5v11A1.75 1.75 0 0 1 16.5 21h-9A1.75 1.75 0 0 1 5.75 19.25v-13.75A1.75 1.75 0 0 1 7.5 3.75Z" stroke="currentColor" stroke-width="1.6"/><path d="M13.75 4v4.5h4.1M8.5 13h7m-7 3.5h7" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
         </span>
         <span>
-          <span class="block text-[15px] font-extrabold tracking-tight">GovtDoc<span class="text-forest">Compressor</span></span>
+          <span class="block text-[15px] font-extrabold tracking-tight">Ez<span class="text-forest">Up</span></span>
           <span class="block text-[10px] font-semibold uppercase tracking-[.18em] text-muted">Application photo, sorted.</span>
         </span>
       </a>
@@ -103,8 +104,8 @@
           <svg class="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-muted" width="17" height="17" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="m5 7.5 5 5 5-5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
         </div>
         <div id="custom-fields" class="mt-4 hidden grid-cols-3 gap-3">
-          <div><label for="custom-width" class="mb-1.5 block text-xs font-semibold text-muted">Width (px)</label><input id="custom-width" type="number" min="1" max="10000" value="300" class="w-full rounded-xl border border-ink/15 bg-paper px-3 py-3 text-sm outline-none focus:border-forest focus:ring-2 focus:ring-forest/15"></div>
-          <div><label for="custom-height" class="mb-1.5 block text-xs font-semibold text-muted">Height (px)</label><input id="custom-height" type="number" min="1" max="10000" value="400" class="w-full rounded-xl border border-ink/15 bg-paper px-3 py-3 text-sm outline-none focus:border-forest focus:ring-2 focus:ring-forest/15"></div>
+          <div><label for="custom-width" class="mb-1.5 block text-xs font-semibold text-muted">Width (px)</label><input id="custom-width" type="number" min="1" max="10000" placeholder="Original" class="w-full rounded-xl border border-ink/15 bg-paper px-3 py-3 text-sm outline-none focus:border-forest focus:ring-2 focus:ring-forest/15"></div>
+          <div><label for="custom-height" class="mb-1.5 block text-xs font-semibold text-muted">Height (px)</label><input id="custom-height" type="number" min="1" max="10000" placeholder="Original" class="w-full rounded-xl border border-ink/15 bg-paper px-3 py-3 text-sm outline-none focus:border-forest focus:ring-2 focus:ring-forest/15"></div>
           <div><label for="custom-size" class="mb-1.5 block text-xs font-semibold text-muted">Max KB</label><input id="custom-size" type="number" min="1" max="10240" value="100" class="w-full rounded-xl border border-ink/15 bg-paper px-3 py-3 text-sm outline-none focus:border-forest focus:ring-2 focus:ring-forest/15"></div>
         </div>
         <div class="mt-5 rounded-xl bg-paper p-4">
@@ -112,7 +113,7 @@
             <span class="text-sm font-semibold">Output target</span>
             <span id="target-summary" class="mono text-xs font-medium text-forest">150 × 200 px · ≤ 30 KB</span>
           </div>
-          <p class="mt-2 text-xs leading-5 text-muted">Images keep their original proportions and fit within these dimensions. The target is a maximum; smaller files are always fine.</p>
+          <p class="mt-2 text-xs leading-5 text-muted">In Custom, leave width or height blank to use that image’s original dimension. Set either value only if you want to resize; proportions are preserved.</p>
         </div>
       </div>
 
@@ -132,7 +133,11 @@
           <span class="mt-1 text-xs text-muted">or <span class="font-bold text-forest underline underline-offset-2">browse files</span> · multiple files welcome</span>
           <span class="mt-3 text-[11px] text-muted">Your images are processed locally and never uploaded.</span>
         </button>
-        <input id="file-input" type="file" accept="image/*" multiple class="sr-only">
+        <input id="file-input" type="file" accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp" multiple class="sr-only">
+        <div class="mt-3 text-center">
+          <button id="folder-button" type="button" class="rounded-lg px-3 py-2 text-sm font-bold text-forest underline decoration-forest/30 underline-offset-4 transition hover:bg-leaf/50">Choose a folder</button>
+        </div>
+        <input id="folder-input" type="file" accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp" webkitdirectory multiple class="sr-only">
         <p id="notice" class="mt-3 min-h-5 text-sm text-clay" role="status" aria-live="polite"></p>
       </div>
     </section>
@@ -149,11 +154,12 @@
         <p class="text-sm font-semibold text-muted">Your compressed images will show up here.</p>
         <p class="mt-1 text-xs text-muted">Add a file above to get started.</p>
       </div>
+      <div id="folder-archives" class="mt-4 space-y-3"></div>
       <div id="batch-list" class="mt-4 space-y-3"></div>
     </section>
     <footer class="mt-16 flex flex-col gap-2 border-t border-ink/10 pt-5 text-xs text-muted sm:flex-row sm:items-center sm:justify-between">
       <span>Made for simpler applications. No account, no uploads, no fuss.</span>
-      <span class="mono">GovtDocCompressor · Built for your browser</span>
+      <span class="mono">EzUp · Built for your browser</span>
     </footer>
   </main>
 
@@ -167,20 +173,25 @@
       const customFields = document.getElementById("custom-fields");
       const targetSummary = document.getElementById("target-summary");
       const fileInput = document.getElementById("file-input");
+      const folderInput = document.getElementById("folder-input");
       const dropZone = document.getElementById("drop-zone");
+      const folderButton = document.getElementById("folder-button");
       const batchList = document.getElementById("batch-list");
+      const folderArchives = document.getElementById("folder-archives");
       const batchEmpty = document.getElementById("batch-empty");
       const fileCount = document.getElementById("file-count");
       const clearButton = document.getElementById("clear-button");
       const notice = document.getElementById("notice");
       const items = new Map();
+      const folderBatches = new Map();
       let nextId = 0;
+      let nextFolderId = 0;
 
       function getSettings() {
         if (presetSelect.value !== "custom") return presets[presetSelect.value];
         return {
-          width: Number(document.getElementById("custom-width").value),
-          height: Number(document.getElementById("custom-height").value),
+          width: document.getElementById("custom-width").value === "" ? null : Number(document.getElementById("custom-width").value),
+          height: document.getElementById("custom-height").value === "" ? null : Number(document.getElementById("custom-height").value),
           maxKB: Number(document.getElementById("custom-size").value)
         };
       }
@@ -190,7 +201,7 @@
         customFields.classList.toggle("hidden", !custom);
         customFields.classList.toggle("grid", custom);
         const settings = getSettings();
-        targetSummary.textContent = `${settings.width || "—"} × ${settings.height || "—"} px · ≤ ${settings.maxKB || "—"} KB`;
+        targetSummary.textContent = `${settings.width === null ? "Original" : settings.width} × ${settings.height === null ? "Original" : settings.height} px · ≤ ${settings.maxKB || "—"} KB`;
       }
 
       function formatBytes(bytes) {
@@ -253,13 +264,103 @@
         return item;
       }
 
+      function makeFolderBatch(folderName, files) {
+        const id = ++nextFolderId;
+        const batch = { id, folderName, items: [], paths: new Map(), archiveURL: null, status: "processing" };
+        files.forEach(({ file, path }) => {
+          const item = makeItem(file);
+          item.folderBatchId = id;
+          batch.items.push(item);
+          batch.paths.set(item.id, path);
+        });
+        folderBatches.set(id, batch);
+        renderFolderBatch(batch);
+        return batch;
+      }
+
+      function renderFolderBatch(batch) {
+        let card = document.getElementById(`folder-archive-${batch.id}`);
+        if (!card) {
+          card = document.createElement("article");
+          card.id = `folder-archive-${batch.id}`;
+          card.className = "flex flex-col gap-3 rounded-2xl border border-forest/15 bg-leaf/40 p-4 sm:flex-row sm:items-center sm:justify-between";
+          folderArchives.prepend(card);
+        }
+        const readyCount = batch.items.filter(item => item.status === "done").length;
+        const failedCount = batch.items.filter(item => item.status === "error").length;
+        const finished = readyCount + failedCount === batch.items.length;
+        const status = batch.status === "zipping"
+          ? "Building ZIP…"
+          : batch.status === "ready"
+            ? `${readyCount} compressed ${readyCount === 1 ? "image" : "images"} in ZIP`
+            : finished
+              ? `${readyCount} of ${batch.items.length} images compressed${failedCount ? ` · ${failedCount} failed` : ""}`
+              : `${readyCount} of ${batch.items.length} images compressed`;
+        const action = batch.status === "ready"
+          ? `<a href="${batch.archiveURL}" download="${escapeHTML(batch.folderName)}.zip" class="inline-flex shrink-0 items-center justify-center gap-2 rounded-lg bg-forest px-4 py-2.5 text-xs font-bold text-white transition hover:bg-ink focus:outline-none focus:ring-2 focus:ring-forest/40">Download ZIP <span aria-hidden="true">↓</span></a>`
+          : `<span class="shrink-0 rounded-lg bg-white/70 px-4 py-2.5 text-xs font-bold ${batch.status === "error" ? "text-red-700" : "text-muted"}">${batch.status === "zipping" ? "Preparing…" : batch.status === "error" ? "ZIP unavailable" : "ZIP pending"}</span>`;
+        card.innerHTML = `
+          <div class="flex min-w-0 items-center gap-3">
+            <span class="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-white text-forest">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4.5 7.5h15v12h-15zM3.5 4.5h17v3h-17zM10 11h4m-2-3.5V19" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </span>
+            <div class="min-w-0"><p class="truncate text-sm font-bold">${escapeHTML(batch.folderName)}.zip</p><p class="mt-1 text-xs text-muted">${escapeHTML(status)}</p></div>
+          </div>
+          ${action}`;
+      }
+
+      async function buildFolderArchive(batch) {
+        const succeeded = batch.items.filter(item => item.status === "done");
+        if (batch.items.some(item => item.status === "processing")) return;
+        if (!succeeded.length) {
+          batch.status = "error";
+          renderFolderBatch(batch);
+          return;
+        }
+        if (!window.JSZip) {
+          batch.status = "error";
+          notice.textContent = "The ZIP library did not load. Check your connection and refresh.";
+          renderFolderBatch(batch);
+          return;
+        }
+        batch.status = "zipping";
+        renderFolderBatch(batch);
+        try {
+          const zip = new window.JSZip();
+          const usedPaths = new Set();
+          succeeded.forEach(item => {
+            const relativePath = batch.paths.get(item.id) || item.file.name;
+            const safePath = relativePath.replace(/\\/g, "/").split("/").filter(part => part && part !== "." && part !== "..");
+            const filename = (safePath.pop() || item.file.name).replace(/\.[^.]+$/, "");
+            const directory = safePath.join("/");
+            const basePath = directory ? `${directory}/${filename}` : filename;
+            let zipPath = `${basePath}.jpg`;
+            let duplicate = 2;
+            while (usedPaths.has(zipPath.toLowerCase())) {
+              zipPath = `${basePath} (${duplicate++}).jpg`;
+            }
+            usedPaths.add(zipPath.toLowerCase());
+            zip.file(zipPath || item.output.name, item.output);
+          });
+          const archive = await zip.generateAsync({ type: "blob", compression: "DEFLATE", compressionOptions: { level: 6 } });
+          batch.archiveURL = URL.createObjectURL(archive);
+          batch.status = "ready";
+        } catch (error) {
+          batch.status = "error";
+          notice.textContent = `Could not create ZIP for ${batch.folderName}: ${error instanceof Error ? error.message : "unknown error"}`;
+        }
+        renderFolderBatch(batch);
+      }
+
       function fitImageToBounds(file, maxWidth, maxHeight) {
         return new Promise((resolve, reject) => {
           const image = new Image();
           const sourceURL = URL.createObjectURL(file);
           image.onload = () => {
             URL.revokeObjectURL(sourceURL);
-            const scale = Math.min(1, maxWidth / image.naturalWidth, maxHeight / image.naturalHeight);
+            const widthBound = maxWidth || image.naturalWidth;
+            const heightBound = maxHeight || image.naturalHeight;
+            const scale = Math.min(1, widthBound / image.naturalWidth, heightBound / image.naturalHeight);
             const width = Math.max(1, Math.round(image.naturalWidth * scale));
             const height = Math.max(1, Math.round(image.naturalHeight * scale));
             const canvas = document.createElement("canvas");
@@ -280,7 +381,10 @@
                 reject(new Error("The browser could not convert this image."));
                 return;
               }
-              resolve(new File([blob], file.name.replace(/\.[^.]+$/, "") + ".jpg", { type: "image/jpeg", lastModified: Date.now() }));
+              resolve({
+                file: new File([blob], file.name.replace(/\.[^.]+$/, "") + ".jpg", { type: "image/jpeg", lastModified: Date.now() }),
+                maxWidthOrHeight: Math.max(width, height)
+              });
             }, "image/jpeg", 0.94);
           };
           image.onerror = () => {
@@ -293,7 +397,8 @@
 
       async function compressItem(item, settings) {
         try {
-          if (!Number.isInteger(settings.width) || settings.width < 1 || !Number.isInteger(settings.height) || settings.height < 1 ||
+          if ((settings.width !== null && (!Number.isInteger(settings.width) || settings.width < 1)) ||
+              (settings.height !== null && (!Number.isInteger(settings.height) || settings.height < 1)) ||
               !Number.isFinite(settings.maxKB) || settings.maxKB <= 0) {
             throw new Error("Enter valid dimensions and a size limit greater than zero.");
           }
@@ -301,9 +406,9 @@
             throw new Error("The compression library did not load. Check your connection and refresh.");
           }
           const resized = await fitImageToBounds(item.file, settings.width, settings.height);
-          const compressed = await window.imageCompression(resized, {
+          const compressed = await window.imageCompression(resized.file, {
             maxSizeMB: settings.maxKB / 1024,
-            maxWidthOrHeight: Math.max(settings.width, settings.height),
+            maxWidthOrHeight: resized.maxWidthOrHeight,
             useWebWorker: true,
             maxIteration: 15,
             initialQuality: 0.9,
@@ -315,7 +420,7 @@
             }
           });
           if (!items.has(item.id)) return;
-          item.output = new File([compressed], resized.name, { type: compressed.type || "image/jpeg", lastModified: Date.now() });
+          item.output = new File([compressed], resized.file.name, { type: compressed.type || "image/jpeg", lastModified: Date.now() });
           item.url = URL.createObjectURL(item.output);
           item.status = "done";
           item.progress = 100;
@@ -327,13 +432,26 @@
           item.error = error instanceof Error ? error.message : "Unexpected compression error.";
           notice.textContent = `${item.file.name}: ${item.error}`;
         }
-        if (items.has(item.id)) renderItem(item);
+        if (items.has(item.id)) {
+          renderItem(item);
+          if (item.folderBatchId) {
+            const batch = folderBatches.get(item.folderBatchId);
+            if (batch) {
+              renderFolderBatch(batch);
+              buildFolderArchive(batch);
+            }
+          }
+        }
       }
 
-      function acceptFiles(fileList) {
-        const files = Array.from(fileList);
+      function acceptFiles(fileList, folderName = null) {
+        const files = Array.from(fileList, file => ({
+          file,
+          path: file.webkitRelativePath || file._ezUpRelativePath || file.name
+        }));
         notice.textContent = "";
-        const imageFiles = files.filter(file => file.type.startsWith("image/"));
+        const imageExtensions = /\.(jpe?g|png|webp)$/i;
+        const imageFiles = files.filter(({ file }) => imageExtensions.test(file.name));
         const rejected = files.length - imageFiles.length;
         if (rejected) notice.textContent = `${rejected} non-image ${rejected === 1 ? "file was" : "files were"} skipped.`;
         if (!imageFiles.length && files.length) {
@@ -341,11 +459,71 @@
           return;
         }
         const settings = getSettings();
-        imageFiles.forEach(file => {
-          const item = makeItem(file);
-          compressItem(item, settings);
-        });
+        if (folderName && imageFiles.length) {
+          const batch = makeFolderBatch(folderName, imageFiles);
+          batch.items.forEach(item => compressItem(item, settings));
+        } else {
+          imageFiles.forEach(({ file }) => compressItem(makeItem(file), settings));
+        }
         fileInput.value = "";
+        folderInput.value = "";
+      }
+
+      function readDirectory(entry) {
+        return new Promise((resolve, reject) => {
+          const reader = entry.createReader();
+          const files = [];
+          function readNextBatch() {
+            reader.readEntries(entries => {
+              if (!entries.length) {
+                resolve(files);
+                return;
+              }
+              Promise.all(entries.map(readEntry)).then(batch => {
+                batch.forEach(group => files.push(...group));
+                readNextBatch();
+              }, reject);
+            }, reject);
+          }
+          readNextBatch();
+        });
+      }
+
+      function readEntry(entry) {
+        if (entry.isFile) {
+          return new Promise((resolve, reject) => {
+            entry.file(file => {
+              file._ezUpRelativePath = entry.fullPath.replace(/^\/+/, "");
+              resolve([file]);
+            }, reject);
+          });
+        }
+        if (entry.isDirectory) return readDirectory(entry);
+        return Promise.resolve([]);
+      }
+
+      async function acceptDrop(dataTransfer) {
+        const droppedItems = Array.from(dataTransfer.items || []).map(item => ({
+          entry: typeof item.webkitGetAsEntry === "function" ? item.webkitGetAsEntry() : null,
+          file: typeof item.getAsFile === "function" ? item.getAsFile() : null
+        })).filter(item => item.entry || item.file);
+        if (!droppedItems.some(item => item.entry)) {
+          acceptFiles(dataTransfer.files);
+          return;
+        }
+        try {
+          const groups = await Promise.all(droppedItems.map(item =>
+            item.entry ? readEntry(item.entry) : Promise.resolve([item.file])
+          ));
+          const files = groups.flat();
+          const directoryEntries = droppedItems.filter(item => item.entry && item.entry.isDirectory);
+          const folderName = directoryEntries.length
+            ? (directoryEntries.length === 1 ? directoryEntries[0].entry.name : "dropped-folders")
+            : null;
+          acceptFiles(files, folderName);
+        } catch (error) {
+          notice.textContent = `Could not read the dropped folder: ${error instanceof Error ? error.message : "unknown error"}`;
+        }
       }
 
       presetSelect.addEventListener("change", updateTarget);
@@ -360,6 +538,12 @@
         }
       });
       fileInput.addEventListener("change", event => acceptFiles(event.target.files));
+      folderButton.addEventListener("click", () => folderInput.click());
+      folderInput.addEventListener("change", event => {
+        const firstPath = event.target.files[0]?.webkitRelativePath || "";
+        const folderName = firstPath.split("/")[0] || "compressed-images";
+        acceptFiles(event.target.files, folderName);
+      });
       ["dragenter", "dragover"].forEach(type => dropZone.addEventListener(type, event => {
         event.preventDefault();
         event.stopPropagation();
@@ -370,7 +554,7 @@
         event.stopPropagation();
         dropZone.classList.remove("drop-active");
       }));
-      dropZone.addEventListener("drop", event => acceptFiles(event.dataTransfer.files));
+      dropZone.addEventListener("drop", event => acceptDrop(event.dataTransfer));
       clearButton.addEventListener("click", () => {
         items.forEach(item => {
           if (item.url) URL.revokeObjectURL(item.url);
@@ -378,7 +562,13 @@
           const row = document.getElementById(`item-${item.id}`);
           if (row) row.remove();
         });
+        folderBatches.forEach(batch => {
+          if (batch.archiveURL) URL.revokeObjectURL(batch.archiveURL);
+          const card = document.getElementById(`folder-archive-${batch.id}`);
+          if (card) card.remove();
+        });
         items.clear();
+        folderBatches.clear();
         notice.textContent = "";
         updateBatchState();
       });
