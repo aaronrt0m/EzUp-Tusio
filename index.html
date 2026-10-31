@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#1677b8">
-  <meta name="description" content="Resize and compress photos locally for your portal. Your files stay on your device.">
+  <meta name="description" content="Resize photos in your browser and upload them with resumable transfers when you choose.">
   <title>EzUp — Application photo, sorted.</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <!-- Apply the custom theme after the Tailwind CDN exposes its config object. -->
@@ -12,6 +12,7 @@
   <!-- Vendor libraries used by script.js. -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/browser-image-compression/2.0.2/browser-image-compression.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/tus-js-client@4.3.1/dist/tus.min.js"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Lora:ital,wght@1,400;1,500&family=Open+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -29,7 +30,7 @@
         <span class="serif-italic block text-base text-slate-700 sm:text-lg">Resize &amp; compress images in a couple of clicks.</span>
       </a>
       <div class="mt-7 flex flex-wrap items-center justify-center gap-2 text-sm text-slate-700">
-        <span class="rounded border border-sky-900/15 bg-white/75 px-4 py-2">Private by design</span>
+        <span class="rounded border border-sky-900/15 bg-white/75 px-4 py-2">Private by default</span>
         <span class="rounded border border-sky-900/15 bg-white/75 px-4 py-2">Free to use</span>
         <span class="rounded border border-sky-900/15 bg-white/75 px-4 py-2">Works in your browser</span>
       </div>
@@ -41,7 +42,7 @@
     <section class="border-b border-ink/10 pb-7">
       <h1 class="serif-italic text-3xl text-clay">Description</h1>
       <p class="mt-4 max-w-3xl text-base leading-7 text-ink">
-        Resize and compress your images to match portal requirements. Choose a preset or enter your own dimensions, add your photos, then download the finished files — everything stays on your device.
+        Resize and compress your images in your browser. Choose a preset or enter your own dimensions, then download finished files or upload them to your server when you choose.
       </p>
     </section>
 
@@ -105,7 +106,7 @@
           </span>
           <span class="mt-4 text-sm font-bold">Drag and drop your images</span>
           <span class="mt-1 text-xs text-muted">or <span class="font-bold text-forest underline underline-offset-2">browse files</span> · multiple files welcome</span>
-          <span class="mt-3 text-[11px] text-muted">Your images are processed locally and never uploaded.</span>
+          <span class="mt-3 text-[11px] text-muted">Compressed locally. Upload only when you choose.</span>
         </button>
         <input id="file-input" type="file" accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp" multiple class="sr-only">
         <div class="mt-3 text-center">
@@ -132,11 +133,12 @@
       <div id="batch-list" class="mt-4 space-y-3"></div>
     </section>
     <footer class="mt-16 flex flex-col gap-2 border-t border-ink/10 pt-5 text-xs text-muted sm:flex-row sm:items-center sm:justify-between">
-      <span>No account. No uploads. Just simpler image compression.</span>
+      <span>Your files stay local until you choose to upload them.</span>
       <span class="mono">EzUp · Built for your browser</span>
     </footer>
   </main>
 
+  <script src="upload-config.js"></script>
   <script src="script.js" defer></script>
 </body>
 </html>

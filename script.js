@@ -62,6 +62,131 @@
     clearButton.classList.toggle("hidden", count === 0);
   }
 
+  function createUploadState() {
+    return {
+      status: "idle",
+      progress: 0,
+      error: "",
+      task: null,
+      retryTimer: null
+    };
+  }
+
+  function renderUploadAction(upload, targetAttribute) {
+    if (upload.status === "complete") {
+      return `<span class="px-3 py-2 text-xs font-semibold text-forest">Uploaded ✓</span>`;
+    }
+
+    if (upload.status === "uploading" || upload.status === "retrying") {
+      const label = upload.status === "retrying"
+        ? `Reconnecting · ${upload.progress}%`
+        : `Uploading · ${upload.progress}%`;
+      return `<span class="px-3 py-2 text-xs font-semibold text-muted" role="status">${label}</span>`;
+    }
+
+    const label = upload.status === "error" ? "Retry upload" : "Upload";
+    const title = upload.error ? ` title="${escapeHTML(upload.error)}"` : "";
+    return `
+      <button
+        type="button"
+        ${targetAttribute}
+        class="inline-flex items-center gap-2 rounded-sm border border-forest px-3 py-2 text-xs font-bold text-forest transition hover:bg-sky-50 focus:outline-none focus:ring-2 focus:ring-forest/40"${title}
+      >
+        ${label} <span aria-hidden="true">↑</span>
+      </button>`;
+  }
+
+  function startResumableUpload(file, uploadState, onUpdate) {
+    const endpoint = window.EZUP_TUS_ENDPOINT;
+    if (!window.tus || typeof window.tus.Upload !== "function") {
+      uploadState.status = "error";
+      uploadState.error = "The resumable upload library did not load. Check your connection and refresh.";
+      onUpdate();
+      return;
+    }
+    if (!endpoint || endpoint.includes("YOUR-FLY-SERVICE")) {
+      uploadState.status = "error";
+      uploadState.error = "Set the tus server URL in upload-config.js.";
+      onUpdate();
+      return;
+    }
+
+    uploadState.status = "uploading";
+    uploadState.error = "";
+    uploadState.progress = 0;
+    onUpdate();
+
+    function startAttempt() {
+      const upload = new window.tus.Upload(file, {
+        endpoint,
+        chunkSize: 5 * 1024 * 1024,
+        retryDelays: [0, 1000, 3000, 5000, 10000],
+        metadata: {
+          filename: file.name,
+          filetype: file.type || "application/octet-stream"
+        },
+        onProgress(bytesUploaded, bytesTotal) {
+          uploadState.progress = bytesTotal
+            ? Math.floor((bytesUploaded / bytesTotal) * 100)
+            : 0;
+          if (uploadState.status !== "retrying") uploadState.status = "uploading";
+          onUpdate();
+        },
+        onError(error) {
+          const status = error.originalResponse?.getStatus?.();
+          if (status >= 400 && status < 500 && status !== 408 && status !== 429) {
+            uploadState.status = "error";
+            uploadState.error = error.message || `Upload rejected (${status}).`;
+            uploadState.task = null;
+            onUpdate();
+            return;
+          }
+
+          uploadState.status = "retrying";
+          uploadState.error = "";
+          uploadState.task = null;
+          onUpdate();
+          uploadState.retryTimer = window.setTimeout(startAttempt, 5000);
+        },
+        onSuccess() {
+          uploadState.status = "complete";
+          uploadState.progress = 100;
+          uploadState.error = "";
+          uploadState.task = null;
+          onUpdate();
+        }
+      });
+
+      uploadState.task = upload;
+      upload.findPreviousUploads().then(previousUploads => {
+        if (uploadState.task !== upload) return;
+        if (previousUploads.length) {
+          upload.resumeFromPreviousUpload(previousUploads[0]);
+        }
+        upload.start();
+      }).catch(error => {
+        if (uploadState.task !== upload) return;
+        uploadState.status = "error";
+        uploadState.error = error instanceof Error ? error.message : "Could not resume this upload.";
+        uploadState.task = null;
+        onUpdate();
+      });
+    }
+
+    startAttempt();
+  }
+
+  function stopUpload(uploadState) {
+    if (uploadState.retryTimer !== null) {
+      window.clearTimeout(uploadState.retryTimer);
+      uploadState.retryTimer = null;
+    }
+    if (uploadState.task) {
+      uploadState.task.abort();
+      uploadState.task = null;
+    }
+  }
+
   // Render the status, output size, and download action for an image.
   function renderItem(item) {
     const statusContent = item.status === "processing"
@@ -103,6 +228,9 @@
           Download <span aria-hidden="true">↓</span>
         </a>`
       : `<span class="rounded-lg bg-ink/5 px-3 py-2 text-xs font-bold text-muted">Download</span>`;
+    const uploadAction = item.status === "done"
+      ? renderUploadAction(item.upload, `data-upload-item="${item.id}"`)
+      : "";
 
     const row = document.getElementById(`item-${item.id}`);
     row.innerHTML = `
@@ -134,8 +262,9 @@
           ${output}
         </div>
       </div>
-      <div class="flex justify-end">
+      <div class="flex flex-wrap items-center justify-end gap-2">
         ${download}
+        ${uploadAction}
       </div>`;
   }
 
@@ -160,7 +289,8 @@
       withinLimit: false,
       error: "",
       maxKB: 0,
-      maxSizeLabel: ""
+      maxSizeLabel: "",
+      upload: createUploadState()
     };
     items.set(id, item);
     const row = document.createElement("article");
@@ -180,6 +310,8 @@
       items: [],
       paths: new Map(),
       archiveURL: null,
+      archiveFile: null,
+      upload: createUploadState(),
       status: "processing"
     };
     files.forEach(({ file, path }) => {
@@ -212,7 +344,11 @@
           ? `${readyCount} of ${batch.items.length} images compressed${failedCount ? ` · ${failedCount} failed` : ""}`
           : `${readyCount} of ${batch.items.length} images compressed`;
     const action = batch.status === "ready"
-      ? `<a href="${batch.archiveURL}" download="${escapeHTML(batch.folderName)}.zip" class="inline-flex shrink-0 items-center justify-center gap-2 rounded-sm bg-forest px-4 py-2.5 text-xs font-bold text-white transition hover:bg-sky-900 focus:outline-none focus:ring-2 focus:ring-forest/40">Download ZIP <span aria-hidden="true">↓</span></a>`
+      ? `
+        <div class="flex flex-wrap items-center gap-2">
+          <a href="${batch.archiveURL}" download="${escapeHTML(batch.folderName)}.zip" class="inline-flex shrink-0 items-center justify-center gap-2 rounded-sm bg-forest px-4 py-2.5 text-xs font-bold text-white transition hover:bg-sky-900 focus:outline-none focus:ring-2 focus:ring-forest/40">Download ZIP <span aria-hidden="true">↓</span></a>
+          ${renderUploadAction(batch.upload, `data-upload-folder="${batch.id}"`)}
+        </div>`
       : `<span class="shrink-0 border border-ink/10 bg-white px-4 py-2.5 text-xs font-bold ${batch.status === "error" ? "text-red-700" : "text-muted"}">${batch.status === "zipping" ? "Preparing…" : batch.status === "error" ? "ZIP unavailable" : "ZIP pending"}</span>`;
     card.innerHTML = `
       <div class="flex min-w-0 items-center gap-3">
@@ -259,7 +395,8 @@
         zip.file(zipPath || item.output.name, item.output);
       });
       const archive = await zip.generateAsync({ type: "blob", compression: "DEFLATE", compressionOptions: { level: 6 } });
-      batch.archiveURL = URL.createObjectURL(archive);
+      batch.archiveFile = new File([archive], `${batch.folderName}.zip`, { type: "application/zip" });
+      batch.archiveURL = URL.createObjectURL(batch.archiveFile);
       batch.status = "ready";
     } catch (error) {
       batch.status = "error";
@@ -464,6 +601,22 @@
     const folderName = firstPath.split("/")[0] || "compressed-images";
     acceptFiles(event.target.files, folderName);
   });
+  batchList.addEventListener("click", event => {
+    const button = event.target.closest("[data-upload-item]");
+    if (!button) return;
+
+    const item = items.get(Number(button.dataset.uploadItem));
+    if (!item || item.status !== "done") return;
+    startResumableUpload(item.output, item.upload, () => renderItem(item));
+  });
+  folderArchives.addEventListener("click", event => {
+    const button = event.target.closest("[data-upload-folder]");
+    if (!button) return;
+
+    const batch = folderBatches.get(Number(button.dataset.uploadFolder));
+    if (!batch || batch.status !== "ready" || !batch.archiveFile) return;
+    startResumableUpload(batch.archiveFile, batch.upload, () => renderFolderBatch(batch));
+  });
   ["dragenter", "dragover"].forEach(type => dropZone.addEventListener(type, event => {
     event.preventDefault();
     event.stopPropagation();
@@ -477,12 +630,14 @@
   dropZone.addEventListener("drop", event => acceptDrop(event.dataTransfer));
   clearButton.addEventListener("click", () => {
     items.forEach(item => {
+      stopUpload(item.upload);
       if (item.url) URL.revokeObjectURL(item.url);
       if (item.preview) URL.revokeObjectURL(item.preview);
       const row = document.getElementById(`item-${item.id}`);
       if (row) row.remove();
     });
     folderBatches.forEach(batch => {
+      stopUpload(batch.upload);
       if (batch.archiveURL) URL.revokeObjectURL(batch.archiveURL);
       const card = document.getElementById(`folder-archive-${batch.id}`);
       if (card) card.remove();
